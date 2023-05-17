@@ -2,10 +2,12 @@ package it.polito.tdp.extflightdelays.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
@@ -57,38 +59,68 @@ public class Model {
 		return this.grafo;
 	}
 	
+	public boolean isGraphloaded() {
+		return this.grafo.vertexSet().size()>0;
+	}
 	
-	public List<Airport> percorso(Airport partenza, Airport arrivo){
-		
-		/*List<Airport> result = new ArrayList<>();
-		
-		BreadthFirstIterator<Airport, DefaultEdge> visita = new BreadthFirstIterator<>(this.grafo, partenza);		
-		while(visita.hasNext()) {
-			Airport f = visita.next();
-			result.add(f);
-			//mi restituisce per primo il vertice di partenza e poi quelli di livelli superiori
-		}*/
-		
-		BreadthFirstIterator<Airport,DefaultWeightedEdge> visita = new BreadthFirstIterator<>(this.grafo, partenza);		
-		
-		List<Airport> percorso = new ArrayList<>();
-		
-		Airport corrente = arrivo;
-		percorso.add(0, arrivo);
-		DefaultWeightedEdge e = visita.getSpanningTreeEdge(corrente);
-		
-		while(e!=null) {
-			
-			//restituisce il nodo precedente nel percorso tra corrente e il vertice sorgente (in questo caso partenza)
-			Airport precedente = Graphs.getOppositeVertex(this.grafo, e, corrente);
-			percorso.add(0, precedente);
-			corrente = precedente;
-			
-			e = visita.getSpanningTreeEdge(corrente);		
+	/**
+	 * Metodo per verificare se due aeroporti sono connessi nel grafo, e quindi se esiste un percorso tra i due
+	 * @param origin
+	 * @param destination
+	 * @return
+	 */
+	public boolean esistePercorso(Airport origin, Airport destination) {
+		ConnectivityInspector<Airport, DefaultWeightedEdge> inspect = new ConnectivityInspector<Airport, DefaultWeightedEdge>(this.grafo);
+		if(this.grafo.containsVertex(origin)) {
+			Set<Airport> componenteConnessaOrigine = inspect.connectedSetOf(origin);
+			return componenteConnessaOrigine.contains(destination);
+		}else {
+			return false;
 		}
+	}
+	
+	
+	
+	/**
+	 * Metodo che calcola il percorso tra due aeroporti. Se il percorso non viene trovato, 
+	 * il metodo restituisce null.
+	 * @param origin
+	 * @param destination
+	 * @return
+	 */
+	public List<Airport> trovaPercorso(Airport origin, Airport destination){
+		List<Airport> percorso = new ArrayList<>();
+	 	BreadthFirstIterator<Airport,DefaultWeightedEdge> it = new BreadthFirstIterator<>(this.grafo, origin);
+	 	Boolean trovato = false;
+	 	
+	 	//visito il grafo fino alla fine o fino a che non trovo la destinazione
+	 	while(it.hasNext() & !trovato) {
+	 		Airport visitato = it.next();
+	 		if(visitato.equals(destination))
+	 			trovato = true;
+	 	}
+	 
+	 
+	 	/* se ho trovato la destinazione, costruisco il percorso risalendo l'albero di visita in senso
+	 	 * opposto, ovvero partendo dalla destinazione fino ad arrivare all'origine, ed aggiiungo gli aeroporti
+	 	 * ad ogni step IN TESTA alla lista
+	 	 * se non ho trovato la destinazione, restituisco null.
+	 	 */
+	 	if(trovato) {
+	 		percorso.add(destination);
+	 		Airport step = it.getParent(destination);
+	 		while (!step.equals(origin)) {
+	 			percorso.add(0,step);
+	 			step = it.getParent(step);
+	 		}
+		 
+		 percorso.add(0,origin);
+		 return percorso;
+	 	} else {
+	 		return null;
+	 	}
 		
-		return percorso;
-	}	
+	}
 	
 	
 }

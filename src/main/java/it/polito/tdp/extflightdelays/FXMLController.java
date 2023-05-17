@@ -61,8 +61,15 @@ public class FXMLController {
     	Airport p = this.cmbBoxAeroportoPartenza.getValue();
     	Airport a = this.cmbBoxAeroportoDestinazione.getValue();
     	if (a!=null && p!=null) {
-    		for(Airport air : model.percorso(p, a)) {
-    			this.txtResult.appendText(air.toString()+"\n");
+    		if(model.isGraphloaded()) {
+	    		if(model.esistePercorso(p, a)) {
+		    		for(Airport air : model.trovaPercorso(p, a)) {
+		    			this.txtResult.appendText(air.toString()+"\n");
+		    		}
+	    		}else {
+	    			this.txtResult.setText("Non esite percorso tra i due aeroporti.");}
+    		}else {
+    			this.txtResult.setText("Grafo non caricato.");
     		}
     	}else {
     		this.txtResult.setText("Selezionare correttamente i due aeroporti.");

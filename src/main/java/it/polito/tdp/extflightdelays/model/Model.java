@@ -6,13 +6,11 @@ import java.util.TreeMap;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
-import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
 
 import it.polito.tdp.extflightdelays.db.ExtFlightDelaysDAO;
-import it.polito.tdp.metroparis.model.Fermata;
 
 public class Model {
 	
@@ -48,8 +46,15 @@ public class Model {
 		this.grafo = new SimpleWeightedGraph<Airport, DefaultWeightedEdge>(DefaultWeightedEdge.class);
 		Graphs.addAllVertices(this.grafo, this.Compagnie(x));
 		
-		
-		
+		for (Rotte r : dao.getRotte()) {
+			if(grafo.containsVertex(r.getA()) && grafo.containsVertex(r.getP())) {
+				Graphs.addEdgeWithVertices(this.grafo, r.getP(), r.getA(), r.getCount());
+			}
+		}
+	}
+	
+	public Graph<Airport, DefaultWeightedEdge> getGrafo(){
+		return this.grafo;
 	}
 	
 	
@@ -64,13 +69,13 @@ public class Model {
 			//mi restituisce per primo il vertice di partenza e poi quelli di livelli superiori
 		}*/
 		
-		BreadthFirstIterator<Airport, DefaultEdge> visita = new BreadthFirstIterator<>(this.grafo, partenza);		
+		BreadthFirstIterator<Airport,DefaultWeightedEdge> visita = new BreadthFirstIterator<>(this.grafo, partenza);		
 		
 		List<Airport> percorso = new ArrayList<>();
 		
 		Airport corrente = arrivo;
 		percorso.add(0, arrivo);
-		DefaultEdge e = visita.getSpanningTreeEdge(corrente);
+		DefaultWeightedEdge e = visita.getSpanningTreeEdge(corrente);
 		
 		while(e!=null) {
 			
@@ -83,9 +88,7 @@ public class Model {
 		}
 		
 		return percorso;
-	}
-	}
-	
+	}	
 	
 	
 }

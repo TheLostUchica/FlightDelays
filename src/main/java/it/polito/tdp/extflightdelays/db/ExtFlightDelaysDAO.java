@@ -13,6 +13,7 @@ import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
 import it.polito.tdp.extflightdelays.model.Model;
+import it.polito.tdp.extflightdelays.model.Rotte;
 
 public class ExtFlightDelaysDAO {
 	
@@ -132,5 +133,39 @@ public class ExtFlightDelaysDAO {
 			return false;
 		}
 		
+	}
+	
+	public List<Rotte> getRotte(){
+		
+		String sql = "SELECT p,a,COUNT(*) AS val "
+				+ "FROM ((SELECT ORIGIN_AIRPORT_ID AS p,DESTINATION_AIRPORT_ID AS a "
+				+ "FROM flights) "
+				+ "UNION ALL "
+				+ "(SELECT DESTINATION_AIRPORT_ID AS p,ORIGIN_AIRPORT_ID AS a "
+				+ "FROM flights)) AS tab "
+				+ "WHERE p<a "
+				+ "GROUP BY p,a ";
+		
+		List<Rotte> result = new LinkedList<Rotte>();
+		
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()) {
+				Airport p = this.aeroporti.get(rs.getInt("p"));
+				Airport a = this.aeroporti.get(rs.getInt("a"));
+				if(p!=null && a!=null) {
+					Rotte r = new Rotte(p, a, rs.getInt("val"));
+					result.add(r);
+				}
+			}
+			
+			return result; 
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

@@ -46,7 +46,8 @@ public class FXMLController {
     	String s = this.compagnieMinimo.getText();
     	try {
     		int i = Integer.parseInt(s);
-    		for(Airport a : model.Compagnie(i)) {
+    		model.creaGrafo(i);
+    		for(Airport a : model.getGrafo().vertexSet()) {
     			this.txtResult.appendText(a.toString()+"\n");
     		}
     	}catch(NumberFormatException e) {
@@ -56,7 +57,16 @@ public class FXMLController {
 
     @FXML
     void doTestConnessione(ActionEvent event) {
-
+    	this.txtResult.clear();
+    	Airport p = this.cmbBoxAeroportoPartenza.getValue();
+    	Airport a = this.cmbBoxAeroportoDestinazione.getValue();
+    	if (a!=null && p!=null) {
+    		for(Airport air : model.percorso(p, a)) {
+    			this.txtResult.appendText(air.toString()+"\n");
+    		}
+    	}else {
+    		this.txtResult.setText("Selezionare correttamente i due aeroporti.");
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete

@@ -21,6 +21,7 @@ public class EntryPoint extends Application {
         Model model = new Model();
         FXMLController controller = loader.getController();
         controller.setModel(model);
+        controller.setCombos();
         
         stage.setTitle("Esercizio FlightDelays");
         stage.setScene(scene);

@@ -7,12 +7,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeMap;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
+import it.polito.tdp.extflightdelays.model.Model;
 
 public class ExtFlightDelaysDAO {
+	
+	TreeMap<Integer, Airport> aeroporti;
 
 	public List<Airline> loadAllAirlines() {
 		String sql = "SELECT * from airlines";
@@ -37,9 +41,9 @@ public class ExtFlightDelaysDAO {
 		}
 	}
 
-	public List<Airport> loadAllAirports() {
+	public TreeMap<Integer, Airport> loadAllAirports() {
 		String sql = "SELECT * FROM airports";
-		List<Airport> result = new ArrayList<Airport>();
+		TreeMap<Integer, Airport> result = new TreeMap<Integer, Airport>();
 
 		try {
 			Connection conn = ConnectDB.getConnection();
@@ -50,10 +54,12 @@ public class ExtFlightDelaysDAO {
 				Airport airport = new Airport(rs.getInt("ID"), rs.getString("IATA_CODE"), rs.getString("AIRPORT"),
 						rs.getString("CITY"), rs.getString("STATE"), rs.getString("COUNTRY"), rs.getDouble("LATITUDE"),
 						rs.getDouble("LONGITUDE"), rs.getDouble("TIMEZONE_OFFSET"));
-				result.add(airport);
+				result.put(airport.getId(), airport);
 			}
 
 			conn.close();
+			
+			aeroporti = new TreeMap<Integer, Airport>(result);
 			return result;
 
 		} catch (SQLException e) {
@@ -90,5 +96,41 @@ public class ExtFlightDelaysDAO {
 			System.out.println("Errore connessione al database");
 			throw new RuntimeException("Error Connection Database");
 		}
+	}
+	
+	public boolean setCompagnie() {
+		
+		String sql = "SELECT r, COUNT(*) AS val "
+				+ "FROM ((SELECT ORIGIN_AIRPORT_ID AS r, AIRLINE_ID "
+				+ "FROM flights "
+				+ "GROUP BY ORIGIN_AIRPORT_ID, AIRLINE_ID) "
+				+ "union "
+				+ "(SELECT DESTINATION_AIRPORT_ID AS r, AIRLINE_ID "
+				+ "FROM flights "
+				+ "GROUP BY DESTINATION_AIRPORT_ID, AIRLINE_ID)) AS tabl "
+				+ "GROUP BY r "
+				+ "ORDER by r";
+		
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()) {
+				int id = rs.getInt("r");
+				int value = rs.getInt("val");
+				
+				if(aeroporti.containsKey(id)) {
+					Airport a = aeroporti.get(id);
+					a.setCompagnie(value);
+				}
+			}
+			
+			return true;
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
 	}
 }

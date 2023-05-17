@@ -3,6 +3,7 @@ package it.polito.tdp.extflightdelays;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -28,10 +29,10 @@ public class FXMLController {
     private TextField compagnieMinimo; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbBoxAeroportoPartenza"
-    private ComboBox<?> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
+    private ComboBox<Airport> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbBoxAeroportoDestinazione"
-    private ComboBox<?> cmbBoxAeroportoDestinazione; // Value injected by FXMLLoader
+    private ComboBox<Airport> cmbBoxAeroportoDestinazione; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAnalizza"
     private Button btnAnalizza; // Value injected by FXMLLoader
@@ -41,7 +42,16 @@ public class FXMLController {
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
-
+    	this.txtResult.clear();
+    	String s = this.compagnieMinimo.getText();
+    	try {
+    		int i = Integer.parseInt(s);
+    		for(Airport a : model.Compagnie(i)) {
+    			this.txtResult.appendText(a.toString()+"\n");
+    		}
+    	}catch(NumberFormatException e) {
+    		this.txtResult.setText("Inserito numero nel formato sbagliato.");
+    	}
     }
 
     @FXML
@@ -62,5 +72,12 @@ public class FXMLController {
 
     public void setModel(Model model) {
     	this.model = model;
+    }
+    
+    public void setCombos() {
+    	for(Airport a : model.getAeroporti().values()) {
+    		this.cmbBoxAeroportoPartenza.getItems().add(a);
+    		this.cmbBoxAeroportoDestinazione.getItems().add(a);
+    	}
     }
 }
